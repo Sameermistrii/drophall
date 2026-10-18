@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DropHall</title>
+<meta name="description" content="DropHall is a museum of new launches. Walk through the galleries and see every drop on display.">
+<meta name="theme-color" content="#14161d">
+<meta property="og:title" content="DropHall">
+<meta property="og:description" content="A museum of new launches. Walk the galleries.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Libre+Franklin:wght@400;500;600&family=Cormorant+Garamond:ital,wght@1,500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#">DropHall</a>
+  <nav>
+    <a href="#directory">Directory</a>
+    <a href="#exhibit">Exhibit your launch</a>
+    <a class="ig" href="https://instagram.com/drophall" target="_blank" rel="noopener">@drophall</a>
+  </nav>
+</header>
+
+<!-- The museum walk: a fixed 3D canvas, driven by scrolling through this tall section -->
+<section id="walk" aria-label="Walk through the museum">
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <div class="stage">
+    <div class="intro" id="intro">
+      <p class="hours">Open every day, entry is free</p>
+      <h1>The museum of new launches</h1>
+      <p class="lede">Every drop gets a frame, a case or a wall. Scroll to walk through the galleries.</p>
+      <div class="actions">
+        <a class="btn brass" href="#directory">See the collection</a>
+        <a class="btn ghost" href="#exhibit">Exhibit your launch</a>
+      </div>
+    </div>
+    <div class="room-sign" id="roomSign" aria-live="polite"></div>
+    <article class="placard" id="placard" aria-live="polite"></article>
+    <ol class="map" id="map" aria-hidden="true"></ol>
+  </div>
+</section>
+
+<main>
+  <section id="directory" class="wrap">
+    <div class="head">
+      <h2>Directory</h2>
+      <p>Everything on display right now, room by room.</p>
+    </div>
+    <div class="tools">
+      <label class="search" for="q">
+        <span class="sr">Search the collection</span>
+        <input id="q" type="search" placeholder="Search by name or maker" autocomplete="off">
+      </label>
+      <div class="chips" id="chips" role="group" aria-label="Filter by room"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>Nothing in the collection matches that. Try another name.</p>
+  </section>
+
+  <section id="exhibit" class="wrap">
+    <div class="head">
+      <h2>Exhibit your launch</h2>
+      <p>Put your product in the museum. Pick how it is shown, send the details, and it goes on display after a quick review.</p>
+    </div>
+    <div class="kinds">
+      <article class="kind">
+        <div class="art frame" aria-hidden="true"><span></span></div>
+        <h3>Framed screen</h3>
+        <p>For apps, AI tools and websites. Your launch video or screenshots hang in a gilt frame with a wall label.</p>
+        <p class="need">You send: video or screenshots, logo, one line about it</p>
+      </article>
+      <article class="kind">
+        <div class="art case" aria-hidden="true"><span></span></div>
+        <h3>Glass case</h3>
+        <p>For physical products. Your product turns slowly on a plinth inside a lit case.</p>
+        <p class="need">You send: 3 to 6 photos or a 3D file. Complex products get a 3D model made for a fee.</p>
+      </article>
+      <article class="kind">
+        <div class="art poster" aria-hidden="true"><span></span></div>
+        <h3>Poster wall</h3>
+        <p>For books, films, events, courses and music. Your poster hangs in its own frame.</p>
+        <p class="need">You send: a poster image and a short description</p>
+      </article>
+      <article class="kind wide">
+        <div class="art room" aria-hidden="true"><span></span></div>
+        <h3>Your own room</h3>
+        <p>For big launches. A whole gallery designed around your product, with its own entrance sign.</p>
+        <p class="need">Designed by hand for each brand</p>
+      </article>
+    </div>
+    <div class="cta">
+      <p>Prices are being set. Message us now to reserve a spot in the next opening.</p>
+      <a class="btn brass" href="https://instagram.com/drophall" target="_blank" rel="noopener">Message @drophall</a>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span class="brand">DropHall</span>
+  <span>getdrophall.com</span>
+  <span>Exhibits marked "Sample" show how a spot looks before a launch takes it.</span>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/site.js"></script>
+<script src="js/vendor/three.min.js"></script>
+<script src="js/museum.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "claude_md",
+      "label": "CLAUDE.md",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "rationale": "Project-specific instructions for Claude, including graphify usage rules.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "readme_md",
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "rationale": "Main project documentation describing the museum concept, file structure, and how to add exhibits.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "index_html",
+      "label": "index.html",
+      "file_type": "code",
+      "source_file": "index.html",
+      "rationale": "The main entry point of the application, containing the DOM structure and script inclusions.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "drophall_concept",
+      "label": "DropHall Museum",
+      "file_type": "concept",
+      "source_file": "README.md",
+      "rationale": "The core concept of a virtual museum for new product launches.",
+      "_origin": "semantic"
+    }
+  ],
+  "edges": [
+    {
+      "source": "readme_md",
+      "target": "index_html",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "_origin": "semantic"
+    },
+    {
+      "source": "readme_md",
+      "target": "drophall_concept",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "_origin": "semantic"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 3626,
+  "output_tokens": 1149,
+  "failed_chunks": 0,
+  "out_of_scope_dropped": 7,
+  "uncovered_files": [
+    "E:\\DropHall\\.claude\\CLAUDE.md"
+  ]
+}

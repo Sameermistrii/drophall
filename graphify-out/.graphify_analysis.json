@@ -1,0 +1,60 @@
+{
+  "communities": {
+    "0": [
+      "js_museum",
+      "js_museum_doorway",
+      "js_museum_exhibit",
+      "js_museum_frame",
+      "js_museum_room",
+      "js_museum_showplacard",
+      "js_museum_size"
+    ],
+    "1": [
+      "drophall_concept",
+      "index_html",
+      "readme_md"
+    ],
+    "2": [
+      "js_site",
+      "js_site_render"
+    ],
+    "3": [
+      "claude_md"
+    ],
+    "4": [
+      "js_data"
+    ]
+  },
+  "cohesion": {
+    "0": 0.3333333333333333,
+    "1": 0.6666666666666666,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+  },
+  "gods": [
+    {
+      "id": "js_museum_showplacard",
+      "label": "showPlacard()",
+      "degree": 2
+    },
+    {
+      "id": "js_museum_frame",
+      "label": "frame()",
+      "degree": 2
+    },
+    {
+      "id": "drophall_concept",
+      "label": "DropHall Museum",
+      "degree": 1
+    }
+  ],
+  "surprises": [],
+  "questions": [
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `DropHall Museum` to the rest of the system?",
+      "why": "1 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}
