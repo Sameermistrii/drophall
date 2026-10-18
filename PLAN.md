@@ -22,7 +22,7 @@ Shared board for Sameer, Claude and Cursor. Read before starting; update when do
 
 ## Now: Cursor
 
-1. [ ] `git init`, `.gitignore` (`graphify-out/cache/`, `node_modules/`, `.env`), first commit. Then `graphify hook install`.
+1. [x] `git init`, `.gitignore` (`graphify-out/cache/`, `node_modules/`, `.env`), first commit. Then `graphify hook install`. Remote: https://github.com/Sameermistrii/drophall
 2. [ ] Put the site online: Cloudflare Pages (or Vercel). Connect getdrophall.com, redirect getdrophall.in. Sameer does the account steps.
 3. [ ] Supabase project: `submissions` table (brand, contact, exhibit type, name, description, url, files, status `pending|approved|rejected`, created_at) and a storage bucket for uploads. RLS on: the public can insert only; only admin can read and update.
 4. [ ] `submit.html`: the brand form, with fields that change by exhibit type (see the Exhibit your launch section in `index.html`). File limits: video ≤ 60 s, images ≤ 5 MB, logo PNG.
@@ -49,3 +49,4 @@ _(Claude: add a line here when you need something built or deployed.)_
 - 2026-10-18 Claude: first version of the site (museum walk, Directory, Exhibit your launch).
 - 2026-10-18 Claude: finished the graphify graph build (`graphify-out/`).
 - 2026-10-18 Claude: wrote AGENTS.md and this plan.
+- 2026-10-18 Cursor: git setup (`.gitignore`, first commit, graphify hook) and pushed `main` to github.com/Sameermistrii/drophall.
