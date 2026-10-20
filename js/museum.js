@@ -77,8 +77,33 @@
   // ---------- sky and plaza ----------
   const sky = tex(16, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b0e1c'); gr.addColorStop(.45, '#1f2547'); gr.addColorStop(.62, '#6a4a5a'); gr.addColorStop(.7, '#c98a5e'); gr.addColorStop(.72, '#14161d'); gr.addColorStop(1, '#14161d'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
   add(new THREE.SphereGeometry(300, 32, 16), basic({map: sky, side: THREE.BackSide, fog: false, depthWrite: false}));
-  const plazaT = tex(256, 256, (g, w, h) => { g.fillStyle = '#5d5a55'; g.fillRect(0, 0, w, h); noise(g, w, h, .2); g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, 0, w, 3); g.fillRect(0, 0, 3, h); }, [30, 30]);
-  add(new THREE.PlaneGeometry(120, 120), std({map: plazaT, roughness: .8}), 0, -1.2, 40, 0, -Math.PI / 2);
+  const grassT = tex(512, 512, (g, w, h) => {
+    g.fillStyle = '#1a3a28'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 9000; i++) {
+      g.fillStyle = `hsl(${96 + Math.random() * 36}, ${24 + Math.random() * 18}%, ${14 + Math.random() * 16}%)`;
+      g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 2 + Math.random() * 3);
+    }
+    for (let i = 0; i < 28; i++) {
+      g.fillStyle = `rgba(${12 + Math.random() * 18}, ${36 + Math.random() * 28}, 16, .2)`;
+      g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 28 + Math.random() * 48, 14 + Math.random() * 22, Math.random() * 3, 0, 7); g.fill();
+    }
+  }, [26, 26]);
+  add(new THREE.PlaneGeometry(180, 180), std({map: grassT, roughness: .96}), 0, -1.23, 18, 0, -Math.PI / 2);
+  const pathT = tex(256, 512, (g, w, h) => {
+    g.fillStyle = '#4a4641'; g.fillRect(0, 0, w, h);
+    const pw = w / 2, ph = 56;
+    for (let row = 0; row < Math.ceil(h / ph) + 1; row++) {
+      const off = (row % 2) * (pw / 2);
+      for (let col = -1; col < 3; col++) {
+        g.fillStyle = `hsl(32, ${7 + (row + col) % 4}%, ${40 + ((row * 3 + col) % 6) * 2}%)`;
+        g.fillRect(col * pw + off + 3, row * ph + 3, pw - 6, ph - 6);
+      }
+    }
+    noise(g, w, h, .16);
+  }, [1, 7]);
+  add(new THREE.PlaneGeometry(4.6, 30), std({map: pathT, roughness: .74}), 0, -1.205, 22, 0, -Math.PI / 2);
+  const curb = std({color: 0x3a3632, roughness: .88});
+  for (const s of [-1, 1]) box(.16, .07, 30, curb, s * 2.36, -1.175, 22);
 
   // ---------- the entrance: steps, portico, pediment ----------
   const PD = 4.4; // portico depth in front of the facade
@@ -108,6 +133,10 @@
   box(28.3, .35, PD + .6, stone, 0, 11.4, PD / 2 - .1);
   const tri = new THREE.Shape(); tri.moveTo(-14.1, 0); tri.lineTo(14.1, 0); tri.lineTo(0, 3.4); tri.lineTo(-14.1, 0);
   add(new THREE.ExtrudeGeometry(tri, {depth: PD + .5, bevelEnabled: false}), stone, 0, 11.57, -.4);
+  // foundation wings sit in the lawn beside the path; side walls and a roof give the front a building behind it
+  for (const s of [-1, 1]) box(13.2, .32, 2.4, stone, s * 11.2, -1.1, 6.5);
+  for (const s of [-1, 1]) box(.75, 12.6, 22, stone, s * 16.15, 5.1, -8);
+  box(32.8, .35, 16, std({color: 0x7e786c, roughness: .92}), 0, 11.25, -9);
   // inscription over the door
   const lintel = tex(1024, 128, (g, w, h) => { g.fillStyle = '#d6cebd'; g.fillRect(0, 0, w, h); g.font = `700 54px ${DISPLAY}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#5a4f40'; g.fillText('MUSEUM OF NEW LAUNCHES', w / 2, h / 2 + 2); });
   add(new THREE.PlaneGeometry(8, 1), std({map: lintel, roughness: .85}), 0, 7.2, .02);
@@ -119,7 +148,8 @@
   // lamp posts on the plaza
   for (const s of [-1, 1]) { add(new THREE.CylinderGeometry(.07, .1, 4, 10), dark, s * 9, .8, 12); add(new THREE.SphereGeometry(.28, 16, 12), basic({color: 0xfff1d6}), s * 9, 3, 12); glow('rgba(255,210,150,.6)', 3.4).position.set(s * 9, 3, 12); }
   const flood = new THREE.DirectionalLight(0xffe2bd, .9); flood.position.set(0, 3, 30); flood.target.position.set(0, 6, 0); S.add(flood, flood.target);
-  S.add(new THREE.HemisphereLight(0xfff1dc, 0x2a2018, .5));
+  const lawnLight = new THREE.DirectionalLight(0xfff3d4, .38); lawnLight.position.set(-6, 16, 26); lawnLight.target.position.set(0, -1, 14); S.add(lawnLight, lawnLight.target);
+  S.add(new THREE.HemisphereLight(0xfff1dc, 0x1a3324, .55));
 
   // ---------- interior: lobby, galleries, final room ----------
   const H = 6.2;
@@ -228,7 +258,7 @@
   const spinners = [];
 
   // keyframes outside and up the steps
-  key(pose(0, .7, 24, 0, 5.4, 0), 0, {intro: true});
+  key(pose(0, 2.4, 26, 0, 1.6, 8), 0, {intro: true});
   key(pose(0, .5, 11, 0, 4.2, 0), 1.2);
   key(pose(0, 1.7, 1.2, 0, 1.8, -10), 1.1);
 

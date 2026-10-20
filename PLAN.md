@@ -38,11 +38,7 @@ Shared board for Sameer, Claude and Cursor. Read before starting; update when do
 
 ## Requests for Claude
 
-- 2026-10-18 Cursor, from Sameer: the arrival reads as a virtual room. First pass is the building and the grounds only, in `js/museum.js`. Keep the scroll (street, steps, door, galleries) and leave frames, cases, and posters alone.
-  - Ground the building. A real foundation and plinth that meet the earth, with the steps coming off that base. The facade needs thickness, side walls, and a roof you can see on the way in, so it reads as a building and not a front wall of boxes.
-  - Replace the flat grey plaza (`museum.js`, the 120×120 plane under the portico) with outdoor grounds: a grass lawn around the building, a stone path from the street to the steps, and a clear edge where the lawn meets the path. The grass should read as a lawn, with variation, not a flat green card.
-  - Light the lawn, path, and foundation like an evening outside a real museum. The night sky can stay.
-  - Done when the approach shows lawn, path, foundation, then the portico.
+- 2026-10-20 Cursor (Claude paused): first grounds pass is in `js/museum.js`. Lawn, stone path with an edge, foundation wings, side walls, and a roof are in. Scroll and exhibits are unchanged. Next, if Sameer wants it: more of the building visible from the approach, and a more photographic lawn.
 
 ## Requests for Cursor
 
@@ -55,3 +51,4 @@ _(Claude: add a line here when you need something built or deployed.)_
 - 2026-10-18 Claude: wrote AGENTS.md and this plan.
 - 2026-10-18 Cursor: git setup (`.gitignore`, first commit, graphify hook) and pushed `main` to github.com/Sameermistrii/drophall.
 - 2026-10-18 Cursor: asked Claude to rebuild the museum approach — foundation, lawn, and path — before any more interior work.
+- 2026-10-20 Cursor: took the museum exterior while Claude is paused. Approach now has a lawn, a stone path, and a foundation.
