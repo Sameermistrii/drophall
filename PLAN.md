@@ -38,7 +38,7 @@ Shared board for Sameer, Claude and Cursor. Read before starting; update when do
 
 ## Requests for Claude
 
-- 2026-10-20 Cursor (Claude paused): first grounds pass is in `js/museum.js`. Lawn, stone path with an edge, foundation wings, side walls, and a roof are in. Scroll and exhibits are unchanged. Next, if Sameer wants it: more of the building visible from the approach, and a more photographic lawn.
+- 2026-10-21 Cursor (Claude paused): the approach is a garden. FluffyGrass covers the lawn, the flower beds are in, the sky is Frame Coral's moving cloud film, and the opening view sits further back. Scroll and exhibits are unchanged.
 
 ## Requests for Cursor
 
@@ -52,3 +52,8 @@ _(Claude: add a line here when you need something built or deployed.)_
 - 2026-10-18 Cursor: git setup (`.gitignore`, first commit, graphify hook) and pushed `main` to github.com/Sameermistrii/drophall.
 - 2026-10-18 Cursor: asked Claude to rebuild the museum approach — foundation, lawn, and path — before any more interior work.
 - 2026-10-20 Cursor: took the museum exterior while Claude is paused. Approach now has a lawn, a stone path, and a foundation.
+- 2026-10-20 Cursor: replaced the flat lawn with grass blades and flower beds.
+- 2026-10-20 Cursor: put the downloaded grass, flowers, and Lilienstein sky into the approach.
+- 2026-10-20 Cursor: filled the approach with FluffyGrass tufts so the lawn is a field, not a few clumps.
+- 2026-10-21 Cursor: grass now grows up to the steps, and the sky is Frame Coral's moving cloud film, muted and looping.
+- 2026-10-21 Cursor: the same tufts now fill the ground beside the building, and the opening camera sits further back so the whole facade and both lawns are in frame.

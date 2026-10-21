@@ -1,5 +1,12 @@
 // The museum walk. Scrolling through #walk moves the camera from the street, up the steps,
 // through the lobby and every gallery, stopping in front of each exhibit.
+import * as THREE from 'three';
+import { GLTFLoader } from './vendor/addons/loaders/GLTFLoader.js';
+import { World } from './grass/core/World.js';
+import { createFluffyLawn } from './grass/fluffy.js?v=5';
+import { SPECIES } from './grass/profiles/profiles.js';
+import { SCENES, QUALITY, resolveSpecies } from './grass/profiles/scenes.js';
+
 (async () => {
   const root = document.documentElement;
   const cv = document.getElementById('gl'), walk = document.getElementById('walk');
@@ -12,15 +19,27 @@
   try { R = new THREE.WebGLRenderer({canvas: cv, antialias: !mobile, powerPreference: 'high-performance'}); }
   catch (e) { root.classList.add('no3d'); return; }
   R.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.25 : 1.75));
-  R.outputEncoding = THREE.sRGBEncoding;
+  R.outputColorSpace = THREE.SRGBColorSpace;
   R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
 
+  const loadGltf = url => new Promise((ok, bad) => new GLTFLoader().load(url, ok, undefined, bad));
+  const gardenP = Promise.all([
+    loadGltf('assets/garden/heliophila.glb?v=3'),
+    loadGltf('assets/garden/periwinkle.glb?v=3'),
+    loadGltf('assets/garden/dandelion.glb?v=3'),
+    loadGltf('assets/garden/celandine.glb?v=3'),
+    new Promise((ok, bad) => new THREE.TextureLoader().load('assets/garden/sky.jpg?v=4', ok, undefined, bad)),
+  ]).then(([heliophila, periwinkle, dandelion, celandine, skyMap]) => ({heliophila: heliophila.scene, periwinkle: periwinkle.scene, dandelion: dandelion.scene, celandine: celandine.scene, skyMap})).catch(err => { console.warn(err); return null; });
+
   // canvas text needs the web fonts; don't wait forever if they can't load (offline)
-  await Promise.race([Promise.all(['700 64px Cinzel', '600 40px "Libre Franklin"', 'italic 500 40px "Cormorant Garamond"'].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]);
+  const garden = await Promise.all([
+    Promise.race([Promise.all(['700 64px Cinzel', '600 40px "Libre Franklin"', 'italic 500 40px "Cormorant Garamond"'].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]),
+    gardenP,
+  ]).then(v => v[1]);
 
   const S = new THREE.Scene();
   const NIGHT = 0x14161d;
-  S.fog = new THREE.Fog(NIGHT, 22, 80);
+  S.fog = new THREE.Fog(0xc5d0c2, 48, 140);
   const cam = new THREE.PerspectiveCamera(mobile ? 66 : 55, 1, .05, 400);
   cam.rotation.order = 'YXZ'; S.add(cam);
   const lamp = new THREE.PointLight(0xffe6c8, .45, 7); cam.add(lamp);
@@ -28,7 +47,7 @@
   // ---------- helpers ----------
   const tex = (w, h, draw, rep) => {
     const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
-    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = R.capabilities.getMaxAnisotropy();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = R.capabilities.getMaxAnisotropy();
     if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
     return t;
   };
@@ -75,20 +94,49 @@
   const wallMat = hex => { const t = tex(256, 256, (g, w, h) => { g.fillStyle = hex; g.fillRect(0, 0, w, h); noise(g, w, h, .05); }, [4, 2]); return std({map: t, roughness: .92, side: THREE.DoubleSide}); };
 
   // ---------- sky and plaza ----------
-  const sky = tex(16, 512, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b0e1c'); gr.addColorStop(.45, '#1f2547'); gr.addColorStop(.62, '#6a4a5a'); gr.addColorStop(.7, '#c98a5e'); gr.addColorStop(.72, '#14161d'); gr.addColorStop(1, '#14161d'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
-  add(new THREE.SphereGeometry(300, 32, 16), basic({map: sky, side: THREE.BackSide, fog: false, depthWrite: false}));
-  const grassT = tex(512, 512, (g, w, h) => {
-    g.fillStyle = '#1a3a28'; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 9000; i++) {
-      g.fillStyle = `hsl(${96 + Math.random() * 36}, ${24 + Math.random() * 18}%, ${14 + Math.random() * 16}%)`;
-      g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 2 + Math.random() * 3);
+  // Frame Coral's sky is a film: the clouds drift. Only the top of that frame
+  // is sky (the hill and the set stay out of view). It loops, muted.
+  S.background = new THREE.Color(0x8ebfe0);
+  const skyFilm = document.createElement('video');
+  skyFilm.src = 'assets/garden/sky.mp4';
+  skyFilm.muted = true;
+  skyFilm.defaultMuted = true;
+  skyFilm.loop = true;
+  skyFilm.playsInline = true;
+  skyFilm.setAttribute('playsinline', '');
+  skyFilm.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none';
+  document.body.appendChild(skyFilm);
+  const skyTex = new THREE.VideoTexture(skyFilm);
+  skyTex.colorSpace = THREE.SRGBColorSpace;
+  const skyDome = add(new THREE.SphereGeometry(280, 48, 24), new THREE.ShaderMaterial({
+    uniforms: { uMap: { value: skyTex } },
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform sampler2D uMap; varying vec2 vUv; void main(){ float y = mix(0.64, 1.0, vUv.y); gl_FragColor = texture2D(uMap, vec2(vUv.x, y)); }',
+  }));
+  skyDome.frustumCulled = false;
+  skyDome.renderOrder = -1;
+  skyFilm.play().catch(() => {});
+  const grassT = tex(1024, 1024, (g, w, h) => {
+    g.fillStyle = '#3c7a49'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 10; i++) {
+      g.fillStyle = i % 2 ? 'rgba(18,48,24,.2)' : 'rgba(210,230,170,.07)';
+      g.fillRect(0, i * (h / 10), w, h / 10);
     }
-    for (let i = 0; i < 28; i++) {
-      g.fillStyle = `rgba(${12 + Math.random() * 18}, ${36 + Math.random() * 28}, 16, .2)`;
-      g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 28 + Math.random() * 48, 14 + Math.random() * 22, Math.random() * 3, 0, 7); g.fill();
+    for (let i = 0; i < 32000; i++) {
+      const x = Math.random() * w, y = Math.random() * h, len = 8 + Math.random() * 18, lean = (Math.random() - .5) * 7;
+      g.strokeStyle = `hsl(${86 + Math.random() * 46}, ${36 + Math.random() * 28}%, ${22 + Math.random() * 20}%)`;
+      g.lineWidth = Math.random() < .12 ? 2 : 1;
+      g.beginPath(); g.moveTo(x, y + len); g.quadraticCurveTo(x + lean * .35, y + len * .45, x + lean, y); g.stroke();
     }
-  }, [26, 26]);
-  add(new THREE.PlaneGeometry(180, 180), std({map: grassT, roughness: .96}), 0, -1.23, 18, 0, -Math.PI / 2);
+    for (let i = 0; i < 500; i++) {
+      g.fillStyle = ['#f6f3ec', '#f0d56a', '#e89aaf', '#f7f7f2'][i % 4];
+      g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 1.1 + Math.random() * 1.8, 0, 7); g.fill();
+    }
+  }, [42, 42]);
+  const plaza = add(new THREE.PlaneGeometry(180, 180), std({map: grassT, roughness: 1}), 0, -1.23, 18, 0, -Math.PI / 2);
   const pathT = tex(256, 512, (g, w, h) => {
     g.fillStyle = '#4a4641'; g.fillRect(0, 0, w, h);
     const pw = w / 2, ph = 56;
@@ -104,6 +152,38 @@
   add(new THREE.PlaneGeometry(4.6, 30), std({map: pathT, roughness: .74}), 0, -1.205, 22, 0, -Math.PI / 2);
   const curb = std({color: 0x3a3632, roughness: .88});
   for (const s of [-1, 1]) box(.16, .07, 30, curb, s * 2.36, -1.175, 22);
+  // photographed plants (Poly Haven, CC0), sitting on the lawn beside the path
+  if (garden) {
+    const prep = scene => {
+      scene.traverse(o => {
+        if (!o.isMesh) return;
+        const maps = [].concat(o.material).map(m => m && m.map).filter(Boolean);
+        if (maps[0]) maps[0].colorSpace = THREE.SRGBColorSpace;
+        o.material = new THREE.MeshBasicMaterial({map: maps[0] || null, alphaTest: .18, side: THREE.DoubleSide, depthWrite: true});
+      });
+      scene.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(scene);
+      scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+      const wrap = new THREE.Group(); wrap.add(scene); return wrap;
+    };
+    const put = (proto, x, z, scale, yaw) => {
+      const g = proto.clone(true);
+      g.position.set(x, -1.22, z); g.rotation.y = yaw; g.scale.setScalar(scale); S.add(g);
+    };
+    const helio = prep(garden.heliophila), peri = prep(garden.periwinkle), dand = prep(garden.dandelion), cel = prep(garden.celandine);
+    for (const s of [-1, 1]) {
+      put(helio, s * 4.6, 14, 1.35, s * .25);
+      put(helio, s * 4.8, 23.5, 1.25, -s * .35);
+      for (const z of [11.5, 18, 25.5]) put(cel, s * 3.7, z, 1.7, Math.PI / 2);
+      put(peri, s * 7.6, 16, 2.1, s * .5);
+      put(peri, s * 7.8, 25, 1.9, -s * .4);
+    }
+    const dandelions = mobile ? 8 : 16;
+    for (let i = 0; i < dandelions; i++) {
+      const s = i % 2 ? -1 : 1;
+      put(dand, s * (3.6 + (i % 5) * 1.1), 12 + (i % 8) * 1.8, 2.4, i);
+    }
+  }
 
   // ---------- the entrance: steps, portico, pediment ----------
   const PD = 4.4; // portico depth in front of the facade
@@ -148,8 +228,9 @@
   // lamp posts on the plaza
   for (const s of [-1, 1]) { add(new THREE.CylinderGeometry(.07, .1, 4, 10), dark, s * 9, .8, 12); add(new THREE.SphereGeometry(.28, 16, 12), basic({color: 0xfff1d6}), s * 9, 3, 12); glow('rgba(255,210,150,.6)', 3.4).position.set(s * 9, 3, 12); }
   const flood = new THREE.DirectionalLight(0xffe2bd, .9); flood.position.set(0, 3, 30); flood.target.position.set(0, 6, 0); S.add(flood, flood.target);
-  const lawnLight = new THREE.DirectionalLight(0xfff3d4, .38); lawnLight.position.set(-6, 16, 26); lawnLight.target.position.set(0, -1, 14); S.add(lawnLight, lawnLight.target);
-  S.add(new THREE.HemisphereLight(0xfff1dc, 0x1a3324, .55));
+  const lawnLight = new THREE.DirectionalLight(0xfff6df, .55); lawnLight.position.set(-6, 16, 26); lawnLight.target.position.set(0, -1, 14); S.add(lawnLight, lawnLight.target);
+  const sun = new THREE.DirectionalLight(0xfff3d2, 1.15); sun.position.set(22, 24, 8); sun.target.position.set(0, 2, 12); S.add(sun, sun.target);
+  S.add(new THREE.HemisphereLight(0xd7e6f2, 0x3d6a40, .7));
 
   // ---------- interior: lobby, galleries, final room ----------
   const H = 6.2;
@@ -258,7 +339,7 @@
   const spinners = [];
 
   // keyframes outside and up the steps
-  key(pose(0, 2.4, 26, 0, 1.6, 8), 0, {intro: true});
+  key(pose(0, 3.8, 44, 0, 1.6, 8), 0, {intro: true});
   key(pose(0, .5, 11, 0, 4.2, 0), 1.2);
   key(pose(0, 1.7, 1.2, 0, 1.8, -10), 1.1);
 
@@ -345,6 +426,41 @@
     [...mapEl.children].forEach((d, j) => { d.classList.toggle('now', j === i); });
   }
 
+  // Ground colour from grass-lab, the blades themselves from FluffyGrass:
+  // each tuft is a fan of blades, tiled across the whole approach.
+  let lawn = null;
+  try {
+    const q = mobile ? QUALITY.low : QUALITY.medium;
+    const def = SCENES.lawn;
+    const species = def.species.map(e => resolveSpecies(e, SPECIES));
+    const world = new World(R, {
+      seed: 7, relief: 0, pathWidth: 0, fieldTile: 128,
+      fieldTex: mobile ? 512 : q.fieldTex, bladeTex: q.bladeTex, variants: q.variants,
+      dryness: def.grass.dryness, shadow: 0, terrainRadius: 90,
+      terrainRadial: mobile ? 80 : 140, terrainAngular: mobile ? 96 : 160,
+    });
+    const avg = new THREE.Color(0, 0, 0);
+    let total = 0;
+    for (const s of species) {
+      const w = s.weight || 1;
+      avg.add(new THREE.Color(s.lamina).multiplyScalar(w));
+      total += w;
+    }
+    avg.multiplyScalar(1 / Math.max(total, 1e-4));
+    world.applyScene(def, avg.clone().multiplyScalar(0.85), avg.clone().multiplyScalar(0.5));
+    world.uniforms.uGroundY.value = -1.22;
+    world.uniforms.uSwardCover.value = 1;
+    R.toneMappingExposure = 1.05;
+    world.terrainMat.polygonOffset = true;
+    world.terrainMat.polygonOffsetFactor = -2;
+    world.terrainMat.polygonOffsetUnits = -2;
+    S.add(world.terrain);
+    const fluffy = await createFluffyLawn({ mobile });
+    S.add(fluffy.mesh);
+    plaza.position.y = -1.32;
+    lawn = { world, fluffy, time: 0, timePrev: 0 };
+  } catch (err) { console.warn('lawn', err); }
+
   const clock = new THREE.Clock();
   function frame() {
     requestAnimationFrame(frame);
@@ -356,6 +472,7 @@
     let i = cum.findIndex(c => c >= t); if (i < 1) i = 1;
     const a = K[i - 1], b = K[i], f = clamp((t - cum[i - 1]) / (b.w || 1)), e = ease(f);
     cam.position.set(a.p.x + (b.p.x - a.p.x) * e, a.p.y + (b.p.y - a.p.y) * e, a.p.z + (b.p.z - a.p.z) * e);
+    skyDome.position.copy(cam.position);
     cam.rotation.y = lerpA(a.p.yaw, b.p.yaw, e); cam.rotation.x = a.p.pitch + (b.p.pitch - a.p.pitch) * e;
     if (!still) spinners.forEach(o => o.rotation.y += dt * .6);
     doorGlow.visible = cam.position.z > 2; // the warm spill is for the street view; inside it would wash out the lobby
@@ -367,6 +484,15 @@
     if (rn !== shownRoom) { shownRoom = rn; sign.textContent = rn || ''; sign.classList.toggle('on', !!rn); }
     const passed = K.filter((k, j) => k.hold && cum[j] <= t + .01).map(k => k.stop);
     [...mapEl.children].forEach((d, j) => d.classList.toggle('done', passed.includes(stops[j])));
+    if (lawn) {
+      const show = cam.position.z > 2;
+      lawn.world.terrain.visible = show;
+      lawn.fluffy.mesh.visible = show;
+      lawn.timePrev = lawn.time;
+      if (!still) lawn.time += dt;
+      lawn.world.update(cam, lawn.time, lawn.timePrev);
+      lawn.fluffy.update(lawn.time);
+    }
     R.render(S, cam);
   }
   frame();

@@ -1,4 +1,5 @@
 .git
+.garden-src
 .github
 .claude
 .cursor

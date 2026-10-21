@@ -1,4 +1,5 @@
 graphify-out/cache/
+.garden-src/
 node_modules/
 .env
 .env.*
